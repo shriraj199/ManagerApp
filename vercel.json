@@ -13,5 +13,7 @@
       "dest": "api/index.py"
     }
   ],
-  "installCommand": "bash build.sh"
+  "env": {
+    "VERCEL": "1"
+  }
 }
