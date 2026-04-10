@@ -1,7 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.template.loader import get_template
-from xhtml2pdf import pisa
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER
+from io import BytesIO
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, get_user_model
@@ -445,9 +451,6 @@ def delete_payment_proof(request, proof_id):
 @login_required
 def generate_proof_receipt_pdf(request, proof_id):
     from .models import PaymentProof
-    from django.http import HttpResponse
-    from django.template.loader import get_template
-    from xhtml2pdf import pisa
 
     proof = PaymentProof.objects.filter(id=proof_id, user=request.user).first()
 
@@ -459,58 +462,106 @@ def generate_proof_receipt_pdf(request, proof_id):
         messages.error(request, "Receipt is only available for verified payments.")
         return redirect('maintenance')
 
-    template = get_template('core/proof_receipt_pdf.html')
-    html = template.render({'proof': proof})
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm,
+                            topMargin=2*cm, bottomMargin=2*cm)
+    styles = getSampleStyleSheet()
+    story = []
+    title_style = ParagraphStyle('title', parent=styles['Title'], fontSize=18,
+                                  textColor=colors.HexColor('#1a1a2e'), spaceAfter=6)
+    story.append(Paragraph('PAYMENT PROOF RECEIPT', title_style))
+    story.append(HRFlowable(width='100%', thickness=1, color=colors.HexColor('#e0e0e0')))
+    story.append(Spacer(1, 0.4*cm))
+    data = [
+        ['Proof ID', f'PR-{proof.id}'],
+        ['Resident', proof.user.get_full_name() or proof.user.username],
+        ['Society', proof.society_name or '—'],
+        ['Date Submitted', str(proof.created_at.date())],
+        ['Transaction ID', proof.transaction_id or '—'],
+        ['Amount', f'Rs. {proof.extracted_amount}'],
+        ['Status', proof.status.upper()],
+    ]
+    table = Table(data, colWidths=[6*cm, 10*cm])
+    table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, colors.HexColor('#f9f9f9')]),
+        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#e0e0e0')),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    story.append(table)
+    story.append(Spacer(1, 0.5*cm))
+    story.append(Paragraph('This is a system-generated receipt.', ParagraphStyle(
+        'footer', parent=styles['Normal'], fontSize=8, textColor=colors.grey, alignment=TA_CENTER)))
+    doc.build(story)
+    pdf = buffer.getvalue()
+    buffer.close()
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="receipt_proof_{proof.id}.pdf"'
-
-    pisa_status = pisa.CreatePDF(html, dest=response)
-    if pisa_status.err:
-        return HttpResponse('Error generating receipt. <pre>' + html + '</pre>')
+    response.write(pdf)
     return response
 @login_required
 def generate_proof_receipt(request, proof_id):
     from .models import PaymentProof, RentPaymentProof
     is_rental = (request.user.role == 'resident' and request.user.resident_role == 'rental')
-    
+
     if is_rental:
         proof = get_object_or_404(RentPaymentProof, id=proof_id, rental_user=request.user, status__in=['verified', 'approved'])
         user_for_receipt = proof.rental_user
     else:
         proof = get_object_or_404(PaymentProof, id=proof_id, user=request.user, status__in=['verified', 'approved'])
         user_for_receipt = proof.user
-    
-    template_path = 'resident/receipt_pdf.html'
-    
-    # Simple mock object to mimic Bill interface for the template
-    mock_bill = {
-        'month': proof.created_at.strftime("%B"),
-        'year': proof.created_at.year,
-        'maintenance_charge': proof.extracted_amount,
-        'total_amount': proof.extracted_amount,
-        'status': 'Verified',
-        'transaction_id': proof.transaction_id or 'SOCIETY_INTERNAL',
-        'payment_date': proof.created_at,
-        'date': proof.created_at,
-        'user': user_for_receipt,
-        'id': f"PR-{proof.id}"
-    }
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm,
+                            topMargin=2*cm, bottomMargin=2*cm)
+    styles = getSampleStyleSheet()
+    story = []
+    title_style = ParagraphStyle('title', parent=styles['Title'], fontSize=18,
+                                  textColor=colors.HexColor('#1a1a2e'), spaceAfter=6)
+    story.append(Paragraph('PAYMENT RECEIPT', title_style))
+    story.append(Paragraph(f'Proof #{proof.id}', ParagraphStyle('sub', parent=styles['Normal'],
+                                                                  fontSize=10, textColor=colors.grey, spaceAfter=12)))
+    story.append(HRFlowable(width='100%', thickness=1, color=colors.HexColor('#e0e0e0')))
+    story.append(Spacer(1, 0.4*cm))
+    data = [
+        ['Resident', user_for_receipt.get_full_name() or user_for_receipt.username],
+        ['Society', user_for_receipt.society_name or '—'],
+        ['Unit No.', user_for_receipt.unit_number or '—'],
+        ['Month', proof.created_at.strftime('%B %Y')],
+        ['Transaction ID', proof.transaction_id or 'SOCIETY_INTERNAL'],
+        ['Amount Paid', f'Rs. {proof.extracted_amount}'],
+        ['Status', 'Verified'],
+        ['Date', str(proof.created_at.date())],
+    ]
+    table = Table(data, colWidths=[6*cm, 10*cm])
+    table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, colors.HexColor('#f9f9f9')]),
+        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#e0e0e0')),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    story.append(table)
+    story.append(Spacer(1, 0.8*cm))
+    story.append(HRFlowable(width='100%', thickness=1, color=colors.HexColor('#e0e0e0')))
+    story.append(Spacer(1, 0.3*cm))
+    story.append(Paragraph('This is a system-generated receipt.', ParagraphStyle(
+        'footer', parent=styles['Normal'], fontSize=8, textColor=colors.grey, alignment=TA_CENTER)))
+    doc.build(story)
+    pdf = buffer.getvalue()
+    buffer.close()
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="receipt_{proof.id}.pdf"'
-    
-    logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'pwa', 'logo.png')
-    
-    template = get_template(template_path)
-    html = template.render({
-        'bill': mock_bill,
-        'logo_path': logo_path
-    })
-
-    pisa_status = pisa.CreatePDF(html, dest=response)
-    if pisa_status.err:
-       return HttpResponse('Error generating receipt')
+    response.write(pdf)
     return response
 
 @login_required

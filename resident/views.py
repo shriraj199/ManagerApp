@@ -4,7 +4,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.template.loader import get_template
-from xhtml2pdf import pisa
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from io import BytesIO
 from .models import Bill, Complaint
 from django.utils import timezone
 from datetime import date
@@ -130,23 +136,68 @@ def generate_receipt_pdf(request, bill_id):
         return redirect('admin_dashboard')
     bill = get_object_or_404(Bill, id=bill_id, user=request.user, status='Paid')
 
-    logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'pwa', 'logo.png')
-    context = {
-        'bill': bill,
-        'logo_path': logo_path
-    }
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                            rightMargin=2*cm, leftMargin=2*cm,
+                            topMargin=2*cm, bottomMargin=2*cm)
+    styles = getSampleStyleSheet()
+    story = []
+
+    title_style = ParagraphStyle('title', parent=styles['Title'],
+                                  fontSize=20, textColor=colors.HexColor('#1a1a2e'),
+                                  spaceAfter=6)
+    sub_style = ParagraphStyle('sub', parent=styles['Normal'],
+                                fontSize=10, textColor=colors.grey, spaceAfter=12)
+    label_style = ParagraphStyle('label', parent=styles['Normal'],
+                                  fontSize=9, textColor=colors.grey)
+    value_style = ParagraphStyle('value', parent=styles['Normal'],
+                                  fontSize=11, fontName='Helvetica-Bold')
+
+    story.append(Paragraph('PAYMENT RECEIPT', title_style))
+    story.append(Paragraph(f'Receipt #{bill.id}', sub_style))
+    story.append(HRFlowable(width='100%', thickness=1, color=colors.HexColor('#e0e0e0')))
+    story.append(Spacer(1, 0.4*cm))
+
+    user = bill.user
+    data = [
+        ['Resident Name', user.get_full_name() or user.username],
+        ['Society', user.society_name or '—'],
+        ['Unit No.', user.unit_number or '—'],
+        ['Bill Period', f"{bill.get_month_display() if hasattr(bill, 'get_month_display') else bill.month} {bill.year}"],
+        ['Bill Status', bill.status],
+        ['Transaction ID', bill.transaction_id or '—'],
+        ['Payment Date', str(bill.payment_date or '—')],
+        ['Maintenance Charge', f'Rs. {bill.maintenance_charge}'],
+        ['Late Fee', f'Rs. {bill.late_fee_amount}'],
+        ['Total Amount Paid', f'Rs. {bill.total_amount}'],
+    ]
+
+    table = Table(data, colWidths=[6*cm, 10*cm])
+    table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#555555')),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, colors.HexColor('#f9f9f9')]),
+        ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#e0e0e0')),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    story.append(table)
+    story.append(Spacer(1, 0.8*cm))
+    story.append(HRFlowable(width='100%', thickness=1, color=colors.HexColor('#e0e0e0')))
+    story.append(Spacer(1, 0.3*cm))
+    story.append(Paragraph('This is a system-generated receipt.', ParagraphStyle(
+        'footer', parent=styles['Normal'], fontSize=8, textColor=colors.grey, alignment=TA_CENTER)))
+
+    doc.build(story)
+    pdf = buffer.getvalue()
+    buffer.close()
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="receipt_{bill.id}.pdf"'
-
-    template_path = 'resident/receipt_pdf.html'
-    template = get_template(template_path)
-    html = template.render(context)
-
-    pisa_status = pisa.CreatePDF(html, dest=response)
-
-    if pisa_status.err:
-        return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    response.write(pdf)
     return response
 
 

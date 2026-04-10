@@ -3,8 +3,6 @@ django-lucide
 whitenoise
 gunicorn
 python-dotenv
-xhtml2pdf
 Pillow
 numpy
-# easyocr is very large and might exceed Vercel limits. 
-# Keeping it out for now to ensure site boot, or use a smaller OCR if needed.
+reportlab
