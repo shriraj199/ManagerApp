@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TheManager - Smart Building</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    {% load static %}
+    <link rel="manifest" href="{% static 'core/pwa/manifest.json' %}">
+    <meta name="theme-color" content="#2563EB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        bglight: '#F3F4F6',
+                        card: '#FFFFFF',
+                        bordercolor: '#E5E7EB',
+                        textdark: '#111827',
+                        muted: '#6B7280'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-50 text-textdark antialiased font-sans flex min-h-screen">
+    {% if user.is_authenticated %}
+    <!-- Mobile Header -->
+    <div
+        class="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-100 px-4 py-3 flex justify-between items-center z-50">
+        <div class="flex items-center gap-2.5">
+            <img src="{% static 'core/pwa/logo.png' %}" class="w-8 h-8 rounded-lg object-cover" alt="Logo">
+            <span class="font-bold text-lg tracking-tight">TheManager</span>
+        </div>
+        <button id="mobile-menu-open" class="p-2 text-muted">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar Wrapper -->
+    <aside id="sidebar"
+        class="fixed inset-y-0 left-0 z-[60] w-72 bg-white border-r border-gray-100 transform -translate-x-full transition-transform duration-300 lg:translate-x-0 lg:static lg:inset-0 flex flex-col">
+        <!-- Sidebar Header -->
+        <div class="px-8 py-8 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="{% static 'core/pwa/logo.png' %}"
+                    class="w-11 h-11 rounded-xl object-cover shadow-lg shadow-blue-500/10" alt="Logo">
+                <span class="font-bold text-xl tracking-tight">TheManager</span>
+            </div>
+            <button id="mobile-menu-close" class="lg:hidden p-2 text-muted">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <nav class="flex-1 px-4 pb-4 overflow-y-auto space-y-1 custom-scrollbar">
+            {% url 'home' as home_url %}
+            <a href="{{ home_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == home_url or 'dashboard' in request.path %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="layout-grid" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">Dashboard</span>
+            </a>
+
+            {% if user.role == 'resident' and user.role != 'watchman' %}
+            {% url 'resident_bills' as bills_url %}
+            <a href="{{ bills_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == bills_url %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="file-text" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">Bills</span>
+            </a>
+            {% endif %}
+
+            {% if user.role != 'watchman' %}
+            {% url 'notices' as notices_url %}
+            <a href="{{ notices_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == notices_url %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="bell" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">Notices</span>
+            </a>
+            {% endif %}
+
+            {% if user.role == 'resident' and user.role != 'watchman' %}
+            {% url 'resident_complaints' as complaints_url %}
+            <a href="{{ complaints_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == complaints_url %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="message-square" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">Complaints</span>
+            </a>
+
+            {% if user.resident_role == 'owner' %}
+            {% url 'rental_management' as rentals_url %}
+            <a href="{{ rentals_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if 'rental' in request.path %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="key-round" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">Rentals</span>
+            </a>
+            {% endif %}
+            {% endif %}
+
+            {% if user.role == 'admin' and user.role != 'watchman' %}
+            {% url 'admin_visitors' as visitors_url %}
+            <a href="{{ visitors_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == visitors_url %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="shield" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">Visitors</span>
+            </a>
+            {% endif %}
+
+            {% if user.role != 'watchman' %}
+            {% url 'facilities' as facilities_url %}
+            <a href="{{ facilities_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == facilities_url %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="calendar" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">Facilities</span>
+            </a>
+
+            {% url 'maintenance' as maintenance_url %}
+            <a href="{{ maintenance_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == maintenance_url %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="banknote" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">
+                    {% if user.role == 'resident' and user.resident_role == 'rental' %}Rent{% else %}Maintenance{% endif %}
+                </span>
+            </a>
+            {% endif %}
+
+            {% if user.role == 'secretary' and user.role != 'watchman' %}
+            {% url 'maintenance_settings' as maint_settings_url %}
+            <a href="{{ maint_settings_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == maint_settings_url %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="settings" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">Fee Settings</span>
+            </a>
+            {% endif %}
+
+            {% if user.role == 'admin' or user.role == 'secretary' %}
+            {% url 'admin_cashbook' as cashbook_url %}
+            <a href="{{ cashbook_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == cashbook_url %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="book-open" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">Cashbook</span>
+            </a>
+
+            {% url 'admin_expenses' as expenses_url %}
+            <a href="{{ expenses_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == expenses_url %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="trending-up" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">Expenses</span>
+            </a>
+            {% endif %}
+
+            {% if user.role != 'watchman' %}
+            {% url 'members' as members_url %}
+            <a href="{{ members_url }}"
+                class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == members_url %}bg-blue-50 text-primary font-bold shadow-sm shadow-blue-500/10{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                <i data-lucide="users" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+                <span class="text-sm tracking-wide">Members</span>
+            </a>
+            {% endif %}
+
+            <div class="pt-4 mt-4 border-t border-gray-100">
+                {% url 'profile' as profile_url %}
+                <a href="{{ profile_url }}"
+                    class="flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group {% if request.path == profile_url %}bg-blue-50 text-primary font-bold{% else %}text-muted hover:bg-gray-50 hover:text-textdark{% endif %}">
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                    <span class="text-sm tracking-wide">Profile</span>
+                </a>
+
+                <form action="{% url 'logout' %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-rose-500 hover:bg-rose-50 transition-all group font-bold">
+                        <i data-lucide="log-out" class="w-5 h-5 transition-transform group-hover:translate-x-1"></i>
+                        <span class="text-sm tracking-wide">Logout</span>
+                    </button>
+                </form>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Overlay -->
+    <div id="overlay"
+        class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[55] hidden lg:hidden transition-opacity duration-300 opacity-0">
+    </div>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0 bg-gray-50/50">
+        <main
+            class="flex-1 overflow-y-auto {% if user.is_authenticated %}pt-20 lg:pt-0{% endif %} p-4 lg:p-8 custom-scrollbar">
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white p-4 rounded-3xl shadow-2xl border border-blue-100 flex items-center justify-between z-[100] hidden animate-bounce">
+        <div class="flex items-center gap-3">
+            <img src="{% static 'core/pwa/icon-192.png' %}" class="w-10 h-10 rounded-xl" alt="App Icon">
+            <div>
+                <p class="font-bold text-sm">Install TheManager</p>
+                <p class="text-[10px] text-muted text-nowrap">Add to home screen for native feel</p>
+            </div>
+        </div>
+        <button id="pwa-install-btn"
+            class="bg-primary text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-600 transition">Install</button>
+    </div>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #E5E7EB;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #D1D5DB;
+        }
+    </style>
+
+    <script>
+        lucide.createIcons();
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').then(function (registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function (err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        let deferredPrompt;
+        const installBanner = document.getElementById('pwa-install-banner');
+        const installBtn = document.getElementById('pwa-install-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.classList.remove('hidden');
+        });
+
+        installBtn?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBanner.classList.add('hidden');
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        // Mobile Menu Logic
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const openBtn = document.getElementById('mobile-menu-open');
+        const closeBtn = document.getElementById('mobile-menu-close');
+
+        function toggleMenu(show) {
+            if (show) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.add('opacity-100'), 0);
+                document.body.style.overflow = 'hidden';
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.remove('opacity-100');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+                document.body.style.overflow = '';
+            }
+        }
+
+        openBtn?.addEventListener('click', () => toggleMenu(true));
+        closeBtn?.addEventListener('click', () => toggleMenu(false));
+        overlay?.addEventListener('click', () => toggleMenu(false));
+    </script>
+</body>
+
+</html>

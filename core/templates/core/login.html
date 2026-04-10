@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex-1 flex items-center justify-center p-6">
+    <div class="w-full max-w-md bg-card rounded-3xl p-8 shadow-xl border border-bordercolor">
+        <div class="flex justify-center mb-6">
+            <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <i data-lucide="building" class="text-primary w-8 h-8"></i>
+            </div>
+        </div>
+        <h1 class="text-3xl font-extrabold text-center text-textdark mb-2 tracking-tight">TheManager</h1>
+        <p class="text-center text-muted font-medium mb-8">Sign in to your account</p>
+        
+        <form method="post" action="{% url 'login' %}" class="space-y-5">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-bold text-textdark mb-2">Username</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="user" class="text-muted w-5 h-5"></i>
+                    </div>
+                    <input type="text" name="username" class="bg-gray-50 border border-bordercolor text-textdark rounded-xl focus:ring-2 focus:ring-primary focus:border-primary block w-full pl-12 p-3 font-medium transition-all" placeholder="Enter username" required>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-bold text-textdark mb-2">Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="lock" class="text-muted w-5 h-5"></i>
+                    </div>
+                    <input type="password" name="password" class="bg-gray-50 border border-bordercolor text-textdark rounded-xl focus:ring-2 focus:ring-primary focus:border-primary block w-full pl-12 p-3 font-medium transition-all" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            {% if form.errors %}
+                <p class="text-red-500 text-center font-semibold text-sm">Invalid username or password.</p>
+            {% endif %}
+
+            <button type="submit" class="w-full text-white bg-primary hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-bold rounded-xl text-lg px-5 py-4 text-center shadow-lg shadow-primary/30 transition-all flex justify-center items-center gap-2">
+                Sign In <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
+        </form>
+
+        <div class="mt-8 text-center bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+            <p class="text-muted font-bold text-xs uppercase tracking-widest mb-2">New here?</p>
+            <a href="{% url 'register' %}" class="text-primary font-black text-sm hover:underline tracking-tight">Create an account</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col flex-1 max-w-lg mx-auto w-full p-6 pb-24">
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-textdark tracking-tight">My Bills</h1>
+        <p class="text-muted font-medium mt-1">Maintenance & utilities history</p>
+    </div>
+
+    <div class="space-y-4">
+        {% for bill in bills %}
+        <div class="bg-white border border-bordercolor rounded-3xl p-6 shadow-sm hover:shadow-md transition-all group">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <i data-lucide="receipt" class="w-6 h-6"></i>
+                </div>
+                {% if bill.status == 'Pending' %}
+                    <span class="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100">
+                        {{ bill.status }}
+                    </span>
+                {% else %}
+                    <span class="px-3 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-green-100">
+                        {{ bill.status }}
+                    </span>
+                {% endif %}
+            </div>
+            
+            <h3 class="font-extrabold text-textdark text-lg mb-1">{{ bill.title }}</h3>
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-xs font-bold text-muted">{{ bill.month }} {{ bill.year }}</span>
+                <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                <span class="text-xs font-bold {% if today > bill.due_date and bill.status == 'Pending' %}text-rose-500{% else %}text-muted{% endif %}">
+                    Due: {{ bill.due_date|date:"M d, Y" }}
+                </span>
+            </div>
+
+            <div class="flex items-center justify-between pt-4 border-t border-gray-50">
+                <p class="text-2xl font-black text-textdark">₹{{ bill.total_amount }}</p>
+                <div class="flex gap-2">
+                    <button onclick="showBillDetails('{{ bill.id }}')" class="px-4 py-2 bg-gray-50 hover:bg-gray-100 text-textdark text-xs font-black uppercase tracking-widest rounded-xl transition-all">
+                        Details
+                    </button>
+                    {% if bill.status == 'Paid' %}
+                    <a href="{% url 'generate_receipt_pdf' bill.id %}" class="px-4 py-2 bg-primary text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all">
+                        Receipt
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bill Details Modal (Hidden by default) -->
+        <div id="modal-{{ bill.id }}" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+            <div class="absolute inset-0 bg-textdark/40 backdrop-blur-sm" onclick="hideBillDetails('{{ bill.id }}')"></div>
+            <div class="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+                <button onclick="hideBillDetails('{{ bill.id }}')" class="absolute top-6 right-6 p-2 text-muted hover:text-textdark transition-colors">
+                    <i data-lucide="x-circle" class="w-8 h-8"></i>
+                </button>
+
+                <div class="text-center mb-8">
+                    <h2 class="text-xl font-black text-textdark tracking-tight">Bill Details - {{ bill.month }} {{ bill.year }}</h2>
+                    <p class="text-xs text-muted font-bold mt-1">Complete breakdown of charges</p>
+                </div>
+
+                <div class="flex justify-between mb-8">
+                    <div>
+                        <p class="text-[10px] font-black text-muted uppercase tracking-widest mb-1">Flat Number</p>
+                        <p class="text-sm font-extrabold text-textdark">{{ user.unit_number|default:"N/A" }}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-black text-muted uppercase tracking-widest mb-1">Member Name</p>
+                        <p class="text-sm font-extrabold text-textdark">{{ user.first_name|default:user.username }}</p>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-6 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <p class="text-sm font-medium text-muted">Maintenance Charges</p>
+                        <p class="text-sm font-extrabold text-textdark">₹{{ bill.maintenance_charge }}</p>
+                    </div>
+                    {% if bill.late_fee_amount > 0 %}
+                    <div class="flex justify-between items-center">
+                        <p class="text-sm font-black text-rose-500">Late Fee Tax (21%)</p>
+                        <p class="text-sm font-black text-rose-500">₹{{ bill.late_fee_amount }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="border-t border-gray-100 mt-6 pt-6 flex justify-between items-center">
+                    <p class="text-lg font-black text-textdark uppercase tracking-widest">Total Amount</p>
+                    <p class="text-2xl font-black text-textdark">₹{{ bill.total_amount }}</p>
+                </div>
+
+                {% if bill.status == 'Pending' %}
+                <div class="mt-8">
+                    <a href="{% url 'maintenance' %}" class="block w-full bg-primary text-white text-center font-black rounded-2xl py-4 uppercase tracking-widest text-xs shadow-xl shadow-primary/30 hover:bg-blue-600 transition-all">
+                        Proceed to Pay
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="p-12 flex flex-col justify-center items-center text-center">
+            <div class="w-16 h-16 bg-gray-50 text-muted rounded-full flex items-center justify-center mb-4">
+                <i data-lucide="receipt" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg font-bold text-textdark mb-2">No bills yet</h3>
+            <p class="text-muted text-sm">Your monthly maintenance bills will appear here.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function showBillDetails(id) {
+    document.getElementById('modal-' + id).classList.remove('hidden');
+    document.getElementById('modal-' + id).classList.add('flex');
+}
+function hideBillDetails(id) {
+    document.getElementById('modal-' + id).classList.add('hidden');
+    document.getElementById('modal-' + id).classList.remove('flex');
+}
+</script>
+{% endblock %}

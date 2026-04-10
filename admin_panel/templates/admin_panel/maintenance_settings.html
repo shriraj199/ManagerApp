@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col flex-1 max-w-2xl mx-auto w-full p-6">
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-textdark tracking-tight">Maintenance Settings</h1>
+        <p class="text-muted font-medium mt-1">Set monthly charges for {{ settings.society_name }}</p>
+    </div>
+
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="p-4 rounded-2xl text-sm font-bold shadow-sm bg-green-50 text-green-700 border border-green-100 flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="bg-white border border-bordercolor rounded-[2.5rem] p-8 shadow-sm">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="space-y-2">
+                <label class="text-xs font-black uppercase text-muted tracking-widest ml-2">Last 4 Digits of Society Account (Anti-Fraud)</label>
+                <input type="text" name="expected_payee_account" value="{{ settings.expected_payee_account|default:'' }}" placeholder="e.g. 5200" maxlength="4"
+                    class="w-full bg-gray-50 border-none rounded-2xl py-4 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all">
+                <p class="text-[10px] text-muted font-medium ml-2">Highly recommended! Match the account shown in the screenshot.</p>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-xs font-black uppercase text-secondary tracking-widest ml-2">Society Maintenance QR</label>
+                <div class="relative group">
+                    <input type="file" name="maintenance_qr" id="qr_input" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="previewQR(this)">
+                    <div class="bg-gray-50 border-2 border-dashed border-bordercolor rounded-3xl p-6 text-sm font-bold text-muted group-hover:border-secondary group-hover:text-secondary transition-all flex flex-col items-center justify-center gap-4">
+                        <div id="qr_preview_container" class="{% if not settings.maintenance_qr %}hidden{% endif %} w-32 h-32 bg-white rounded-2xl border border-bordercolor p-1 shadow-sm overflow-hidden">
+                            <img id="qr_preview" src="{% if settings.maintenance_qr %}{{ settings.maintenance_qr.url }}{% else %}#{% endif %}" alt="QR Preview" class="w-full h-full object-contain">
+                        </div>
+                        <div class="flex flex-col items-center gap-2" id="qr_placeholder">
+                            <span id="qr_filename">{% if settings.maintenance_qr %}Click to Change QR{% else %}Upload Society QR Code{% endif %}</span>
+                            <i data-lucide="image" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-xs font-black uppercase text-muted tracking-widest ml-2">Maintenance Charge (₹)</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted font-bold">₹</div>
+                    <input type="number" name="maintenance_charge" value="{{ settings.maintenance_charge }}" required step="0.01"
+                        class="w-full bg-gray-50 border-none rounded-2xl py-4 pl-10 pr-4 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-xs font-black uppercase text-muted tracking-widest ml-2">Due Day (1-28)</label>
+                    <input type="number" name="due_day" value="{{ settings.due_day }}" min="1" max="28" required
+                        class="w-full bg-gray-50 border-none rounded-2xl py-4 px-4 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all">
+                    <p class="text-[10px] text-muted font-medium ml-2">Tax starts after this day.</p>
+                </div>
+                <div class="space-y-2 text-right">
+                    <label class="text-xs font-black uppercase text-muted tracking-widest mr-2">Late Fee Tax</label>
+                    <div class="text-2xl font-black text-rose-500 mt-2">{{ settings.late_fee_percentage }}%</div>
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" class="w-full bg-primary hover:bg-blue-700 text-white font-black rounded-2xl py-4 shadow-xl shadow-primary/30 transition-all transform active:scale-[0.98]">
+                    Save Society Fees
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="mt-12 p-8 bg-blue-50/50 rounded-[2rem] border border-blue-100/50">
+        <h3 class="text-sm font-black text-primary uppercase tracking-widest mb-4">Generate Bills</h3>
+        <p class="text-xs text-muted font-bold leading-relaxed mb-6">
+            Ready to send out bills for this month? This will create a maintenance bill for every resident based on the rates above.
+        </p>
+        <form action="{% url 'generate_bills' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="bg-white hover:bg-gray-50 text-textdark font-black rounded-2xl px-6 py-4 text-xs uppercase tracking-widest shadow-sm border border-bordercolor transition-all w-full flex items-center justify-center gap-2">
+                <i data-lucide="zap" class="w-4 h-4 text-amber-500"></i> Generate Monthly Bills
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function previewQR(input) {
+    const preview = document.getElementById('qr_preview');
+    const container = document.getElementById('qr_preview_container');
+    const filename = document.getElementById('qr_filename');
+    const placeholder = document.getElementById('qr_placeholder');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            container.classList.remove('hidden');
+            filename.textContent = input.files[0].name;
+            filename.classList.add('text-secondary');
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock %}

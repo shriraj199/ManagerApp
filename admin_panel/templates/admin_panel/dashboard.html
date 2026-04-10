@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col flex-1 max-w-lg mx-auto w-full p-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold text-textdark tracking-tight leading-none">Admin Hub</h1>
+            <p class="text-muted font-medium mt-1">Welcome back, {{ user.first_name|default:user.username }} 👋</p>
+        </div>
+    </div>
+
+    <!-- MAIN EXPENSE CARD -->
+    <div class="bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-[2.5rem] shadow-xl shadow-gray-200 mb-8 relative overflow-hidden text-white">
+        <div class="absolute -right-4 -top-4 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
+        <div class="flex justify-between items-center mb-6">
+            <p class="font-black text-gray-400 text-[10px] uppercase tracking-[0.2em]">Society Expenditure</p>
+            <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-rose-400">
+                <i data-lucide="wallet" class="w-6 h-6"></i>
+            </div>
+        </div>
+        <p class="text-6xl font-black tracking-tighter mb-4 italic">₹{{ total_expenses }}</p>
+        <div class="flex items-center gap-3">
+            <div class="bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl flex items-center gap-2">
+                <div class="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></div>
+                <span class="text-xs font-bold">{{ expenses_count }} Total Records</span>
+            </div>
+            <a href="{% url 'admin_expenses' %}" class="text-xs font-bold text-gray-400 hover:text-white transition underline underline-offset-4 decoration-rose-500/30">View All</a>
+        </div>
+    </div>
+
+    <!-- Real-time Stats -->
+    <h2 class="text-[10px] font-black text-muted uppercase tracking-widest px-1 mb-4 flex items-center">
+        <i data-lucide="bar-chart-3" class="w-3 h-3 mr-2"></i>
+        Quick Insights
+    </h2>
+    <div class="grid grid-cols-2 gap-4 mb-10">
+        <div class="bg-white p-6 rounded-[2rem] border border-bordercolor shadow-sm transition hover:shadow-md">
+            <div class="w-12 h-12 bg-blue-50 text-primary rounded-2xl flex items-center justify-center mb-4">
+                <i data-lucide="bell" class="w-6 h-6"></i>
+            </div>
+            <p class="text-3xl font-black text-textdark tracking-tight leading-none mb-1">{{ notices_count }}</p>
+            <p class="text-[10px] font-black text-muted uppercase tracking-widest">Live Notices</p>
+        </div>
+        <a href="{% url 'complaints_list_admin' %}" class="bg-white p-6 rounded-[2rem] border border-bordercolor shadow-sm transition hover:shadow-md active:scale-95 block">
+            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-4">
+                <i data-lucide="alert-circle" class="w-6 h-6"></i>
+            </div>
+            <p class="text-3xl font-black text-textdark tracking-tight leading-none mb-1">{{ complaints_count }}</p>
+            <p class="text-[10px] font-black text-muted uppercase tracking-widest">Pending Issues</p>
+        </a>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="space-y-4">
+        <h3 class="text-[10px] font-black text-muted uppercase tracking-widest px-1">Actions & Oversight</h3>
+        
+        <!-- Invite Watchman Card -->
+        <button onclick="copyWatchmanInvite()" class="w-full bg-white p-6 rounded-[2rem] border border-bordercolor shadow-sm flex items-center justify-between group active:scale-[0.98] transition hover:border-emerald-500/20 hover:shadow-md text-left">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    <i data-lucide="user-plus" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="font-black text-textdark leading-none mb-1" id="invite-status">Invite Watchman</p>
+                    <p class="text-[10px] font-bold text-muted uppercase tracking-widest leading-none" id="invite-subtext">Copy Registration Link</p>
+                </div>
+            </div>
+            <i data-lucide="copy" class="w-5 h-5 text-gray-300 group-hover:text-emerald-600 transition-colors" id="copy-icon"></i>
+        </button>
+
+        <a href="{% url 'admin_cashbook' %}" class="bg-white p-6 rounded-[2rem] border border-bordercolor shadow-sm flex items-center justify-between group active:scale-[0.98] transition hover:border-primary/20 hover:shadow-md">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-gray-50 text-muted rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                    <i data-lucide="book-open" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="font-black text-textdark leading-none mb-1">Society Cashbook</p>
+                    <p class="text-[10px] font-bold text-muted uppercase tracking-widest leading-none">View All Ledgers</p>
+                </div>
+            </div>
+            <i data-lucide="arrow-right" class="w-5 h-5 text-gray-300 group-hover:text-primary transition-colors"></i>
+        </a>
+    </div>
+
+    <script>
+        function copyWatchmanInvite() {
+            const inviteCode = "{{ invite_code }}";
+            const baseUrl = window.location.origin;
+            const inviteUrl = `${baseUrl}/register/?role=watchman&invite_code=${inviteCode}`;
+            
+            navigator.clipboard.writeText(inviteUrl).then(() => {
+                const status = document.getElementById('invite-status');
+                const subtext = document.getElementById('invite-subtext');
+                const icon = document.getElementById('copy-icon');
+                
+                status.textContent = "COPIED!";
+                status.classList.add('text-emerald-600');
+                subtext.textContent = "Ready to Paste";
+                icon.classList.replace('text-gray-300', 'text-emerald-600');
+                
+                setTimeout(() => {
+                    status.textContent = "Invite Watchman";
+                    status.classList.remove('text-emerald-600');
+                    subtext.textContent = "Copy Registration Link";
+                    icon.classList.replace('text-emerald-600', 'text-gray-300');
+                }, 2000);
+            });
+        }
+    </script>
+</div>
+{% endblock %}

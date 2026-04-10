@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col flex-1 max-w-4xl mx-auto w-full p-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-textdark tracking-tight">Society Members</h1>
+            <p class="text-muted font-medium">People in {{ society_name }}</p>
+        </div>
+        {% if invite_code %}
+        <div class="bg-blue-50/50 border border-blue-100 rounded-2xl p-3 flex items-center gap-4">
+            <div>
+                <p class="text-[10px] font-black uppercase text-primary tracking-widest mb-1">Society Invite Code</p>
+                <span class="font-mono font-bold text-textdark tracking-widest select-all">{{ invite_code }}</span>
+            </div>
+            <button onclick="copyInviteLink('{{ invite_code }}')" class="w-10 h-10 bg-white hover:bg-gray-50 text-muted hover:text-primary rounded-xl flex items-center justify-center border border-bordercolor transition-colors shadow-sm" title="Copy Invite Link">
+                <i data-lucide="link" class="w-4 h-4"></i>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Members List -->
+    <div class="bg-card border border-bordercolor rounded-3xl p-2 shadow-sm">
+        {% for member in members %}
+        <div class="p-4 hover:bg-gray-50 rounded-2xl transition-all border-b border-gray-100 last:border-0 flex justify-between items-center group">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-blue-50 text-primary rounded-full flex items-center justify-center font-bold text-lg">
+                    {{ member.first_name|default:member.username|make_list|first|upper }}
+                </div>
+                <div>
+                    <p class="text-sm font-extrabold text-textdark flex items-center gap-1.5 flex-wrap">
+                        {{ member.first_name|default:member.username }}
+                        {% if member.unit_number %}
+                        <span class="text-primary">({{ member.unit_number }})</span>
+                        {% endif %}
+                        {% if member.role == 'resident' %}
+                            {% if member.resident_role == 'owner' %}
+                            <span class="text-[9px] font-black uppercase tracking-widest bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-lg">🏠 Owner</span>
+                            {% elif member.resident_role == 'rental' %}
+                            <span class="text-[9px] font-black uppercase tracking-widest bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded-lg">🔑 Rental</span>
+                            {% endif %}
+                        {% endif %}
+                    </p>
+                    <p class="text-xs font-bold text-muted mt-1 uppercase tracking-widest">
+                        {{ member.get_role_display }}
+                        {% if request.user.role == 'secretary' and member.role == 'resident' and member.resident_role == 'owner' and member.pending_amount > 0 %}
+                            <span class="text-rose-500 ml-2">• ₹{{ member.pending_amount }} Pending</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% if member.mobile_number %}
+                {% if request.user.role == 'secretary' or member.role == 'secretary' %}
+                <a href="tel:{{ member.mobile_number }}" class="w-10 h-10 bg-green-50 hover:bg-green-100 text-green-600 rounded-full flex items-center justify-center transition-colors shadow-sm" title="Call Member">
+                    <i data-lucide="phone" class="w-4 h-4"></i>
+                </a>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="p-12 flex flex-col justify-center items-center text-center">
+            <div class="w-16 h-16 bg-gray-50 text-muted rounded-full flex items-center justify-center mb-4">
+                <i data-lucide="users" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg font-bold text-textdark mb-2">No other members yet</h3>
+            <p class="text-muted text-sm max-w-md mx-auto">You are the first person here!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function copyInviteLink(code) {
+    const url = window.location.origin + "{% url 'register' %}?invite_code=" + code;
+    navigator.clipboard.writeText(url).then(function() {
+        alert("Invite link copied to clipboard!");
+    }, function(err) {
+        console.error('Async: Could not copy text: ', err);
+        alert("Invite Code is: " + code);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col flex-1 max-w-lg mx-auto w-full p-6 pb-24">
+    <!-- Header -->
+    <div class="flex items-center mb-8 gap-4">
+        <a href="{% url 'admin_dashboard' %}" class="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center shadow-sm hover:bg-gray-50 transition active:scale-90 flex-shrink-0">
+            <i data-lucide="arrow-left" class="w-6 h-6 text-textdark"></i>
+        </a>
+        <div>
+            <h1 class="text-3xl font-extrabold text-textdark tracking-tight leading-none mb-1">Resident Complaints</h1>
+            <p class="text-[10px] font-black text-muted uppercase tracking-widest">{{ user.society_name }} &bull; Dispute Resolution</p>
+        </div>
+    </div>
+
+    <!-- Active List -->
+    <div class="space-y-6">
+        {% for complaint in complaints %}
+        <div class="bg-white p-6 rounded-[2rem] border {% if complaint.status == 'Open' %}border-amber-100 shadow-amber-500/5{% else %}border-bordercolor{% endif %} shadow-sm flex flex-col gap-4 relative overflow-hidden transition hover:shadow-md">
+            {% if complaint.status == 'Open' %}
+            <div class="absolute top-0 right-0 px-4 py-1.5 bg-amber-500 text-white text-[9px] font-black uppercase tracking-widest rounded-bl-2xl">
+                Open Action
+            </div>
+            {% endif %}
+
+            <div class="flex items-start gap-4">
+                <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 {% if complaint.status == 'Open' %}bg-amber-50 text-amber-600{% else %}bg-gray-50 text-muted{% endif %}">
+                    <i data-lucide="message-square" class="w-7 h-7"></i>
+                </div>
+                <div class="flex-1 min-w-0 pr-12">
+                    <h3 class="font-black text-textdark text-lg leading-tight mb-1 truncate">{{ complaint.title }}</h3>
+                    <div class="flex items-center gap-2">
+                        <p class="text-[10px] font-black text-muted uppercase tracking-widest">{{ complaint.user.first_name|default:complaint.user.username }}</p>
+                        <span class="text-[10px] text-gray-300">&bull;</span>
+                        <p class="text-[10px] font-black text-muted uppercase tracking-widest">{{ complaint.created_at|date:"d M, H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50/50 p-4 rounded-2xl flex items-center justify-between">
+                <div class="flex flex-col">
+                    <p class="text-[9px] font-black text-muted uppercase tracking-widest mb-0.5">Category</p>
+                    <p class="text-xs font-bold text-textdark">{{ complaint.complaint_type }}</p>
+                </div>
+                
+                {% if complaint.status == 'Open' %}
+                <form action="{% url 'complaint_resolve' complaint.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-primary text-white text-[10px] font-black uppercase tracking-widest py-2.5 px-6 rounded-xl shadow-md shadow-primary/20 hover:scale-105 active:scale-95 transition">
+                        Mark Resolved
+                    </button>
+                </form>
+                {% else %}
+                <div class="flex items-center gap-2 text-green-600">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <span class="text-[10px] font-black uppercase tracking-widest">Resolved</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="flex flex-col items-center justify-center py-24 text-center">
+            <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-8 shadow-sm border border-gray-50">
+                <i data-lucide="smile" class="w-10 h-10 text-green-500"></i>
+            </div>
+            <h3 class="text-xl font-black text-textdark mb-2">No Active Complaints!</h3>
+            <p class="text-sm font-medium text-muted">All residents are currently happy and satisfied.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

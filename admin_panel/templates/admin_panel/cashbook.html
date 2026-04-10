@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col flex-1 max-w-lg mx-auto w-full p-6 pb-24">
+    <!-- Header -->
+    <div class="flex items-center mb-8 gap-4">
+        <a href="{% url 'admin_dashboard' %}" class="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex flex-shrink-0 items-center justify-center shadow-sm hover:bg-gray-50 transition active:scale-90">
+            <i data-lucide="arrow-left" class="w-6 h-6 text-textdark"></i>
+        </a>
+        <div>
+            <h1 class="text-3xl font-extrabold text-textdark tracking-tight leading-none mb-1">Cashbook</h1>
+            <p class="text-[10px] font-black text-muted uppercase tracking-widest">{{ user.society_name }} &bull; Financial Ledger</p>
+        </div>
+    </div>
+
+    <!-- Tab Buttons -->
+    <div class="flex bg-white p-1.5 rounded-[2rem] border border-bordercolor shadow-sm mb-10 overflow-hidden" id="cashbook-tabs">
+        <button onclick="switchTab('resident')" id="tab-resident" class="flex-1 py-4 px-6 rounded-[1.6rem] text-xs font-black uppercase tracking-widest transition-all bg-primary text-white shadow-lg shadow-primary/20">
+            Resident Records
+        </button>
+        <button onclick="switchTab('other')" id="tab-other" class="flex-1 py-4 px-6 rounded-[1.6rem] text-xs font-black uppercase tracking-widest transition-all text-muted hover:bg-gray-50">
+            Other Records
+        </button>
+    </div>
+
+    <!-- Tab Contents -->
+    <div id="content-resident" class="overflow-x-auto">
+        <div class="bg-white rounded-[2rem] border border-bordercolor shadow-sm overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50/50">
+                        <th class="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest border-b border-bordercolor">Date</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest border-b border-bordercolor">Flat No</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest border-b border-bordercolor">Resident Name</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest border-b border-bordercolor text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {% for record in resident_records %}
+                    <tr class="hover:bg-gray-50/50 transition-colors group">
+                        <td class="px-6 py-5 text-xs font-bold text-muted">{{ record.created_at|date:"d M, Y" }}</td>
+                        <td class="px-6 py-5">
+                            <span class="text-[10px] font-black text-primary bg-blue-50 py-1.5 px-3 rounded-full border border-blue-100">
+                                {{ record.user.unit_number|default:"-" }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-5">
+                            <p class="text-sm font-black text-textdark leading-none">{{ record.user.first_name|default:record.user.username }}</p>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            <span class="text-sm font-black text-green-600">₹{{ record.extracted_amount|default:"0" }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-muted font-bold text-sm italic">No resident records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="content-other" class="overflow-x-auto hidden">
+        <div class="bg-white rounded-[2rem] border border-bordercolor shadow-sm overflow-hidden text-white/0">
+             <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50/50">
+                        <th class="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest border-b border-bordercolor">Date</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest border-b border-bordercolor">Payee / Role</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest border-b border-bordercolor text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    {% for record in other_records %}
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                        <td class="px-6 py-5 text-xs font-bold text-muted">{{ record.created_at|date:"d M, Y" }}</td>
+                        <td class="px-6 py-5">
+                            <p class="text-sm font-black text-textdark leading-none mb-1">{{ record.payee_name }}</p>
+                            <p class="text-[10px] font-bold text-muted uppercase tracking-widest leading-none">{{ record.description|truncatechars:20 }}</p>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            <span class="text-sm font-black text-rose-500">-₹{{ record.amount }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-12 text-center text-muted font-bold text-sm italic">No expenditures found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(tab) {
+        const resBtn = document.getElementById('tab-resident');
+        const othBtn = document.getElementById('tab-other');
+        const resContent = document.getElementById('content-resident');
+        const othContent = document.getElementById('content-other');
+
+        const activeStyles = ['bg-primary', 'text-white', 'shadow-lg', 'shadow-primary/20'];
+        const inactiveStyles = ['text-muted', 'hover:bg-gray-50'];
+
+        if (tab === 'resident') {
+            resBtn.classList.add(...activeStyles);
+            resBtn.classList.remove(...inactiveStyles);
+            othBtn.classList.remove(...activeStyles);
+            othBtn.classList.add(...inactiveStyles);
+            
+            resContent.classList.remove('hidden');
+            othContent.classList.add('hidden');
+        } else {
+            othBtn.classList.add(...activeStyles);
+            othBtn.classList.remove(...inactiveStyles);
+            resBtn.classList.remove(...activeStyles);
+            resBtn.classList.add(...inactiveStyles);
+            
+            othContent.classList.remove('hidden');
+            resContent.classList.add('hidden');
+        }
+        
+        lucide.createIcons();
+    }
+</script>
+{% endblock %}

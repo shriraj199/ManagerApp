@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col flex-1 max-w-4xl mx-auto w-full p-6">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-textdark tracking-tight">Active Societies</h1>
+            <p class="text-muted font-medium">Manage all societies associated with your company</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <div class="relative flex-1 min-w-[250px]">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted"></i>
+                <input type="text" id="societySearchInput" onkeyup="filterSocieties()" placeholder="Search societies..." class="w-full bg-white border border-bordercolor rounded-xl pl-9 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary shadow-sm transition-shadow">
+            </div>
+            <a href="{% url 'company_dashboard' %}" class="bg-primary hover:bg-blue-700 text-white font-black rounded-xl px-4 py-2.5 uppercase tracking-wide text-xs shadow-lg shadow-primary/30 transition-all flex justify-center items-center gap-2 whitespace-nowrap">
+                <i data-lucide="plus" class="w-4 h-4"></i> Add New Society
+            </a>
+        </div>
+    </div>
+
+    <!-- Societies Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for society in societies %}
+        <div class="society-card bg-card border border-bordercolor rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all flex flex-col justify-between">
+            <div class="mb-6">
+                <div class="w-12 h-12 bg-blue-50 text-primary rounded-2xl flex items-center justify-center mb-4">
+                    <i data-lucide="building-2" class="w-6 h-6"></i>
+                </div>
+                <h2 class="text-lg font-extrabold text-textdark truncate" title="{{ society.society_name }}">{{ society.society_name }}</h2>
+                <p class="text-xs font-bold text-muted uppercase tracking-widest mt-1">Managed Society</p>
+            </div>
+            
+            <div class="pt-4 border-t border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-black uppercase text-muted tracking-widest mb-1">Invite Code</p>
+                    <span class="bg-blue-50 border border-blue-100 text-primary font-mono font-bold px-3 py-1 rounded-lg text-sm select-all">
+                        {{ society.code }}
+                    </span>
+                </div>
+                <button onclick="copyInviteLink('{{ society.code }}')" class="w-10 h-10 bg-gray-50 hover:bg-gray-100 text-muted hover:text-primary rounded-xl flex items-center justify-center transition-colors" title="Copy Invite Link">
+                    <i data-lucide="link" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-dashed border-gray-300 rounded-3xl p-12 flex flex-col justify-center items-center text-center">
+            <div class="w-16 h-16 bg-gray-50 text-muted rounded-full flex items-center justify-center mb-4">
+                <i data-lucide="inbox" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg font-bold text-textdark mb-2">No Societies Found</h3>
+            <p class="text-muted text-sm max-w-md mx-auto mb-6">You haven't added any societies yet. Go to your dashboard to generate your first invite code.</p>
+            <a href="{% url 'company_dashboard' %}" class="bg-primary text-white font-bold rounded-xl px-6 py-3 shadow-md shadow-primary/20">Go to Dashboard</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Empty Search State -->
+    <div id="noSearchResults" style="display: none;" class="bg-white border border-dashed border-gray-300 rounded-3xl p-12 flex flex-col justify-center items-center text-center mt-6">
+        <div class="w-16 h-16 bg-gray-50 text-muted rounded-full flex items-center justify-center mb-4">
+            <i data-lucide="search-x" class="w-8 h-8"></i>
+        </div>
+        <h3 class="text-lg font-bold text-textdark mb-2">No matching societies</h3>
+        <p class="text-muted text-sm">Try adjusting your search terms.</p>
+    </div>
+</div>
+
+<script>
+function copyInviteLink(code) {
+    const url = window.location.origin + "{% url 'register' %}?invite_code=" + code;
+    navigator.clipboard.writeText(url).then(function() {
+        alert("Invite link copied to clipboard!");
+    }, function(err) {
+        console.error('Async: Could not copy text: ', err);
+        alert("Invite Code is: " + code);
+    });
+}
+
+function filterSocieties() {
+    const input = document.getElementById('societySearchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.society-card');
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        const title = card.querySelector('h2').innerText.toLowerCase();
+        if (title.includes(input)) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const emptyState = document.getElementById('noSearchResults');
+    if (emptyState) {
+        if (visibleCount === 0 && cards.length > 0) {
+            emptyState.style.display = 'flex';
+        } else {
+            emptyState.style.display = 'none';
+        }
+    }
+}
+</script>
+{% endblock %}

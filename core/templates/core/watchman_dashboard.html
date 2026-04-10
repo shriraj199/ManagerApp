@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col flex-1 max-w-lg mx-auto w-full p-6 pb-24">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-textdark tracking-tight leading-none mb-1">Gate Security</h1>
+            <p class="text-[10px] font-black text-muted uppercase tracking-widest">Visitor Entry Log &bull; Security Point</p>
+        </div>
+        <div class="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+            <i data-lucide="shield-check" class="w-6 h-6"></i>
+        </div>
+    </div>
+
+    <!-- Entry Form -->
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <div class="bg-white p-8 rounded-[2.5rem] border border-bordercolor shadow-sm relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 w-40 h-40 bg-gray-50 rounded-full blur-3xl opacity-50"></div>
+            
+            <div class="space-y-5 relative">
+                <!-- Visitor Name -->
+                <div>
+                    <label class="text-[10px] font-black text-muted uppercase tracking-widest px-1 mb-2 block">Visitor Name</label>
+                    <div class="relative group">
+                        <i data-lucide="user" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors"></i>
+                        <input type="text" name="name" required placeholder="Full Name"
+                            class="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-textdark focus:ring-2 focus:ring-primary/20 transition-all">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Flat Number -->
+                    <div>
+                        <label class="text-[10px] font-black text-muted uppercase tracking-widest px-1 mb-2 block">Unit / Flat No.</label>
+                        <div class="relative group">
+                            <i data-lucide="building" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors"></i>
+                            <input type="text" name="unit" required placeholder="A-101"
+                                class="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-textdark focus:ring-2 focus:ring-primary/20 transition-all">
+                        </div>
+                    </div>
+                    <!-- Vehicle Number -->
+                    <div>
+                        <label class="text-[10px] font-black text-muted uppercase tracking-widest px-1 mb-2 block">Vehicle Number</label>
+                        <div class="relative group">
+                            <i data-lucide="hash" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors"></i>
+                            <input type="text" name="vehicle_number" placeholder="MH 12 AB 1234"
+                                class="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-textdark focus:ring-2 focus:ring-primary/20 transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Visitor Photo -->
+                    <div>
+                        <label class="text-[10px] font-black text-muted uppercase tracking-widest px-1 mb-2 block">Visitor Photo</label>
+                        <div class="relative h-40 group overflow-hidden rounded-2xl">
+                            <input type="file" name="visitor_photo" accept="image/*" capture="camera" onchange="previewImg(this, 'visitor-preview')" class="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer">
+                            <div class="w-full h-full bg-gray-50 border-2 border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center text-center p-4 group-hover:border-primary/30 transition-colors z-10 relative">
+                                <i data-lucide="camera" class="w-8 h-8 text-gray-300 mb-2"></i>
+                                <span class="text-[10px] font-bold text-muted uppercase tracking-widest">Capture Person</span>
+                            </div>
+                            <img id="visitor-preview" class="absolute inset-0 w-full h-full object-cover z-30 hidden scale-102 group-hover:scale-100 transition-transform">
+                        </div>
+                    </div>
+
+                    <!-- Vehicle Photo -->
+                    <div>
+                        <label class="text-[10px] font-black text-muted uppercase tracking-widest px-1 mb-2 block">Vehicle Photo</label>
+                        <div class="relative h-40 group overflow-hidden rounded-2xl">
+                            <input type="file" name="vehicle_photo" accept="image/*" capture="camera" onchange="previewImg(this, 'vehicle-preview')" class="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer">
+                            <div class="w-full h-full bg-gray-50 border-2 border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center text-center p-4 group-hover:border-primary/30 transition-colors z-10 relative">
+                                <i data-lucide="truck" class="w-8 h-8 text-gray-300 mb-2"></i>
+                                <span class="text-[10px] font-bold text-muted uppercase tracking-widest">Capture Vehicle</span>
+                            </div>
+                            <img id="vehicle-preview" class="absolute inset-0 w-full h-full object-cover z-30 hidden scale-102 group-hover:scale-100 transition-transform">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Watchman Name -->
+                <div>
+                    <label class="text-[10px] font-black text-muted uppercase tracking-widest px-1 mb-2 block">Recorded By (Watchman Name)</label>
+                    <div class="relative group">
+                        <i data-lucide="user-check" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300 group-focus-within:text-primary transition-colors"></i>
+                        <input type="text" name="watchman_name" value="{{ user.get_full_name|default:user.username }}"
+                            class="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-textdark focus:ring-2 focus:ring-primary/20 transition-all">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="w-full bg-primary text-white font-black py-5 px-6 rounded-[2rem] flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all text-sm uppercase tracking-[0.2em]">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            Register Entry
+        </button>
+    </form>
+
+    <!-- Recent Visitors Table -->
+    <div class="mt-12 mb-8">
+        <h2 class="text-[10px] font-black text-muted uppercase tracking-widest px-1 mb-4 flex items-center gap-2">
+            <i data-lucide="clock" class="w-3 h-3"></i>
+            Recent Gate Activity
+        </h2>
+        <div class="bg-white rounded-[2.5rem] border border-bordercolor shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-gray-50/50">
+                            <th class="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest">Date & Time</th>
+                            <th class="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest">Visitor</th>
+                            <th class="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest">Unit</th>
+                            <th class="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest">Vehicle</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        {% for visitor in past_visitors %}
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <span class="text-xs font-bold text-textdark block">{{ visitor.time_in|date:"d M Y" }}</span>
+                                <span class="text-[10px] font-black text-muted uppercase tracking-widest">{{ visitor.time_in|date:"H:i" }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    {% if visitor.visitor_photo %}
+                                    <img src="{{ visitor.visitor_photo.url }}" class="w-8 h-8 rounded-lg object-cover shadow-sm">
+                                    {% else %}
+                                    <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+                                        <i data-lucide="user" class="w-4 h-4"></i>
+                                    </div>
+                                    {% endif %}
+                                    <span class="text-xs font-bold text-textdark">{{ visitor.name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-[10px] font-black px-2.5 py-1 bg-gray-100 rounded-full text-textdark uppercase tracking-widest">{{ visitor.unit }}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                {% if visitor.vehicle_number %}
+                                <span class="text-xs font-bold text-primary tracking-tight font-mono">{{ visitor.vehicle_number }}</span>
+                                {% else %}
+                                <span class="text-[10px] font-black text-muted uppercase italic">Walk-in</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-12 text-center">
+                                <i data-lucide="history" class="w-10 h-10 text-gray-200 mx-auto mb-3"></i>
+                                <p class="text-[10px] font-black text-muted uppercase tracking-widest">No recent entries recorded</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImg(input, previewId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById(previewId);
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %}

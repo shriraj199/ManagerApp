@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex flex-col flex-1 max-w-lg mx-auto w-full p-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-2xl font-extrabold text-textdark tracking-tight">
+                Hi, {{ user.first_name|default:user.username }}
+                {% if user.unit_number %}<span class="text-primary">({{ user.unit_number }})</span>{% endif %} 👋
+            </h1>
+            <p class="text-muted font-medium">
+                {% if is_owner %}🏠 Owner &middot; {{ user.society_name }}
+                {% elif is_rental %}🔑 Rental Resident
+                {% else %}Let's manage your apartment{% endif %}
+            </p>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md border border-gray-100 font-bold text-primary text-xl">
+            {{ user.first_name|default:user.username|make_list|first|upper }}
+        </div>
+    </div>
+
+    <!-- ━━━━ TOP NOTIFICATION BANNER ━━━━ -->
+    {% if notices %}
+    <a href="{% url 'notices' %}" class="bg-amber-50 group border border-amber-100 p-4 rounded-3xl flex items-center mb-6 shadow-sm shadow-amber-100/50 hover:bg-amber-100 transition active:scale-[0.98]">
+        <div class="w-10 h-10 bg-white shadow-sm rounded-xl flex items-center justify-center mr-4 text-amber-600">
+            <i data-lucide="megaphone" class="w-5 h-5 group-hover:animate-bounce"></i>
+        </div>
+        <div class="flex-1">
+            <h3 class="font-black text-textdark text-xs uppercase tracking-widest text-amber-700">New Announcement</h3>
+            <p class="text-sm font-bold text-textdark line-clamp-1 mt-0.5">{{ notices.0.title }}</p>
+        </div>
+        <div class="flex items-center text-xs font-black text-amber-800 uppercase tracking-widest bg-white/50 py-1.5 px-3 rounded-full ml-2">
+            View All
+        </div>
+    </a>
+    {% endif %}
+
+    <!-- ━━━━ OWNER: Maintenance Banner ━━━━ -->
+    {% if is_owner %}
+    <div class="bg-gradient-to-br from-blue-600 to-primary p-5 rounded-3xl flex items-center mb-6 shadow-lg shadow-primary/20 relative overflow-hidden text-white">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+        <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mr-4 shrink-0">
+            <i data-lucide="credit-card" class="text-white w-6 h-6"></i>
+        </div>
+        <div class="flex-1">
+            <h3 class="font-bold text-lg">Society Maintenance</h3>
+            <p class="text-sm font-medium opacity-80">Pay dues & upload proofs</p>
+        </div>
+        <a href="{% url 'maintenance' %}" class="bg-white text-primary font-bold py-2.5 px-6 rounded-xl text-sm shadow-sm hover:bg-gray-50 transition active:scale-95 z-10 shrink-0">Go</a>
+    </div>
+
+    <!-- ━━━━ OWNER: Rental Banner ━━━━ -->
+    <div class="bg-gradient-to-br from-orange-500 to-orange-400 p-5 rounded-3xl flex items-center mb-8 shadow-lg shadow-orange-500/20 relative overflow-hidden text-white">
+        <div class="absolute bottom-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mb-16"></div>
+        <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mr-4 shrink-0">
+            <i data-lucide="key-round" class="text-white w-6 h-6"></i>
+        </div>
+        <div class="flex-1">
+            <h3 class="font-bold text-lg">My Rentals</h3>
+            <p class="text-sm font-medium opacity-80">
+                {% with user.tenant_profiles.count as count %}
+                {{ count }} tenant{{ count|pluralize }} configured
+                {% endwith %}
+            </p>
+        </div>
+        <a href="{% url 'rental_management' %}" class="bg-white text-orange-600 font-bold py-2.5 px-6 rounded-xl text-sm shadow-sm hover:bg-orange-50 transition active:scale-95 z-10 shrink-0">Manage</a>
+    </div>
+
+    {% elif is_rental %}
+    <!-- ━━━━ RENTAL: My Rent Banner ━━━━ -->
+    <div class="bg-gradient-to-br from-purple-600 to-purple-500 p-5 rounded-3xl flex items-center mb-8 shadow-lg shadow-purple-600/20 relative overflow-hidden text-white">
+        <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mr-4">
+            <i data-lucide="key" class="text-white w-6 h-6"></i>
+        </div>
+        <div class="flex-1">
+            <h3 class="font-bold text-lg">My Rent</h3>
+            <p class="text-sm font-medium opacity-80">Check balance & pay owner</p>
+        </div>
+        <a href="{% url 'rental_dashboard' %}" class="bg-white text-purple-600 font-bold py-2.5 px-6 rounded-xl text-sm shadow-sm hover:bg-purple-50 transition active:scale-95 shrink-0">View</a>
+    </div>
+
+    {% else %}
+    <!-- Fallback (generic) -->
+    <div class="bg-gradient-to-br from-blue-600 to-primary p-5 rounded-3xl flex items-center mb-8 shadow-lg shadow-primary/20 relative overflow-hidden text-white">
+        <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mr-4">
+            <i data-lucide="credit-card" class="text-white w-6 h-6"></i>
+        </div>
+        <div class="flex-1">
+            <h3 class="font-bold text-lg">Maintenance</h3>
+            <p class="text-sm font-medium opacity-80">Pay dues & upload proofs</p>
+        </div>
+        <a href="{% url 'maintenance' %}" class="bg-white text-primary font-bold py-2.5 px-6 rounded-xl text-sm shadow-sm hover:bg-gray-50 transition active:scale-95 shrink-0">Go</a>
+    </div>
+    {% endif %}
+
+    <!-- ━━━━ STATS GRID ━━━━ -->
+    <div class="grid grid-cols-2 gap-4 mb-8">
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-bordercolor transition hover:shadow-md">
+            <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center mb-4 text-amber-600">
+                <i data-lucide="receipt" class="w-5 h-5"></i>
+            </div>
+            <p class="text-3xl font-extrabold text-textdark">₹{{ total_pending }}</p>
+            <p class="text-sm font-bold text-muted">{{ bills_count }} Pending Bill{{ bills_count|pluralize }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-bordercolor transition hover:shadow-md">
+            <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center mb-4 text-red-600">
+                <i data-lucide="alert-circle" class="w-5 h-5"></i>
+            </div>
+            <p class="text-3xl font-extrabold text-textdark">{{ complaints.count }}</p>
+            <p class="text-sm font-bold text-muted">Open Issues</p>
+        </div>
+    </div>
+
+    <!-- ━━━━ ACTIONS ━━━━ -->
+    <div class="grid grid-cols-2 gap-4 mb-10">
+        {% if is_owner %}
+        <a href="{% url 'maintenance' %}" class="bg-white p-6 rounded-3xl shadow-sm border border-bordercolor active:scale-95 transition-all hover:shadow-md block">
+            <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 text-primary">
+                <i data-lucide="credit-card" class="w-6 h-6"></i>
+            </div>
+            <h3 class="font-bold text-textdark text-base">Bills</h3>
+        </a>
+        <a href="{% url 'rental_management' %}" class="bg-white p-6 rounded-3xl shadow-sm border border-bordercolor active:scale-95 transition-all hover:shadow-md block">
+            <div class="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center mb-4 text-orange-500">
+                <i data-lucide="key-round" class="w-6 h-6"></i>
+            </div>
+            <h3 class="font-bold text-textdark text-base">Rentals</h3>
+        </a>
+        {% endif %}
+        
+        <a href="{% url 'notices' %}" class="bg-white p-6 rounded-3xl shadow-sm border border-bordercolor active:scale-95 transition-all hover:shadow-md block">
+            <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-4 text-amber-600">
+                <i data-lucide="megaphone" class="w-6 h-6"></i>
+            </div>
+            <h3 class="font-bold text-textdark text-base">Notices</h3>
+        </a>
+        <a href="{% url 'resident_complaints' %}" class="bg-white p-6 rounded-3xl shadow-sm border border-bordercolor active:scale-95 transition-all hover:shadow-md block">
+            <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 text-purple-600">
+                <i data-lucide="message-square" class="w-6 h-6"></i>
+            </div>
+            <h3 class="font-bold text-textdark text-base">Complaints</h3>
+        </a>
+    </div>
+</div>
+
+<!-- Welcome Modal (Only for first time users) -->
+{% if show_welcome %}
+<div id="welcome-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-500">
+    <div class="bg-white rounded-[3rem] max-w-md w-full p-10 relative overflow-hidden shadow-2xl border border-white/20">
+        <div class="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -mr-24 -mt-24"></div>
+        <div class="relative z-10">
+            <div class="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mb-8 mx-auto shadow-sm">
+                <i data-lucide="sparkles" class="w-10 h-10 text-primary"></i>
+            </div>
+            
+            <h2 class="text-3xl font-black text-textdark text-center mb-4 tracking-tight">Welcome to TheManager!</h2>
+            <p class="text-muted font-medium text-center mb-8 leading-relaxed">Let's simplify your society management. Here's how to reach us:</p>
+            
+            <div class="space-y-4 mb-10">
+                <div class="flex items-start bg-gray-50 p-6 rounded-[2rem] border border-gray-100 group transition hover:bg-white hover:border-primary/20">
+                    <div class="w-11 h-11 bg-white rounded-2xl flex items-center justify-center mr-5 shadow-sm text-primary group-hover:scale-110 transition">
+                        <i data-lucide="mail" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] uppercase font-black text-muted tracking-widest mb-1">Email Support</p>
+                        <p class="text-sm font-bold text-textdark">TheManagerSupport@gmail.com</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start bg-gray-50 p-6 rounded-[2rem] border border-gray-100 group transition hover:bg-white hover:border-green-500/20">
+                    <div class="w-11 h-11 bg-white rounded-2xl flex items-center justify-center mr-5 shadow-sm text-green-600 group-hover:scale-110 transition">
+                        <i data-lucide="message-circle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] uppercase font-black text-muted tracking-widest mb-1">WhatsApp / Call</p>
+                        <p class="text-sm font-bold text-textdark">7410191867</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="closeWelcome()" class="w-full bg-primary text-white font-black py-5 rounded-[2rem] shadow-lg shadow-primary/30 hover:scale-[1.02] active:scale-95 transition-all text-sm tracking-widest uppercase">
+                Get Started
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function closeWelcome() {
+        document.getElementById('welcome-modal').classList.add('hidden');
+        // Notify server that welcome has been seen
+        fetch('/api/mark-welcome-seen/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        });
+    }
+</script>
+{% endif %}
+{% endblock %}

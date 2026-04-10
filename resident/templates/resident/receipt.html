@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-md mx-auto my-10 p-8 bg-white rounded-3xl shadow-xl border border-gray-100 font-sans">
+    <div class="text-center mb-8">
+        <div class="w-16 h-16 bg-white overflow-hidden rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
+            <img src="{% static 'core/pwa/logo.png' %}" class="w-full h-full object-cover" alt="Logo">
+        </div>
+        <h1 class="text-2xl font-black text-gray-900 tracking-tight">Payment Receipt</h1>
+        <p class="text-gray-500 font-bold text-sm uppercase tracking-widest mt-1">Order #{{
+            bill.transaction_id|default:bill.id }}</p>
+    </div>
+
+    <div class="space-y-6">
+        <div class="flex justify-between border-b border-dashed border-gray-200 pb-4">
+            <span class="text-gray-500 font-bold uppercase text-xs tracking-wider">Payer Name (Verified)</span>
+            <span class="text-gray-900 font-extrabold text-sm">{{
+                bill.user.upi_name|default:bill.user.get_full_name|default:bill.user.username }}</span>
+        </div>
+        <div class="flex justify-between border-b border-dashed border-gray-200 pb-4">
+            <span class="text-gray-500 font-bold uppercase text-xs tracking-wider">Society Name</span>
+            <span class="text-gray-900 font-extrabold text-sm">{{ bill.user.society_name }}</span>
+        </div>
+        <div class="flex justify-between border-b border-dashed border-gray-200 pb-4">
+            <span class="text-gray-500 font-bold uppercase text-xs tracking-wider">Bill Title</span>
+            <span class="text-gray-900 font-extrabold text-sm">{{ bill.title }}</span>
+        </div>
+        <div class="flex justify-between border-b border-dashed border-gray-200 pb-4">
+            <span class="text-gray-500 font-bold uppercase text-xs tracking-wider">Amount Paid</span>
+            <span class="text-gray-900 font-black text-xl">RS.{{ bill.total_amount }}</span>
+        </div>
+        <div class="flex justify-between border-b border-dashed border-gray-200 pb-4">
+            <span class="text-gray-500 font-bold uppercase text-xs tracking-wider">Date</span>
+            <span class="text-gray-900 font-extrabold text-sm">{{ bill.payment_date|date:"M d, Y" }}</span>
+        </div>
+    </div>
+
+    <div class="mt-10 pt-6 border-t border-gray-100 text-center">
+        <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4">Thank you for your payment!</p>
+        <button onclick="window.print()"
+            class="w-full bg-gray-900 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-black transition active:scale-95 flex items-center justify-center gap-2">
+            <i data-lucide="printer" class="w-5 h-5"></i>
+            Download PDF
+        </button>
+        <a href="{% url 'resident_bills' %}" class="block mt-4 text-primary font-extrabold text-sm">Back to Bills</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+{% load static %}
+
+<head>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            color: #111827;
+            line-height: 1.5;
+            background-image: url("{% static 'core/pwa/logo.png' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 5px;
+            color: #2563EB;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: #6B7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-grid {
+            width: 100%;
+            margin-bottom: 40px;
+        }
+
+        .info-col {
+            width: 50%;
+            vertical-align: top;
+        }
+
+        .label {
+            font-size: 10px;
+            font-weight: 800;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .value {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        .table th {
+            text-align: left;
+            font-size: 12px;
+            font-weight: 800;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #F3F4F6;
+        }
+
+        .table td {
+            padding: 16px 0;
+            border-bottom: 1px solid #F3F4F6;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .total-row td {
+            padding-top: 24px;
+            border-bottom: none;
+        }
+
+        .total-label {
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .total-value {
+            font-size: 24px;
+            font-weight: 900;
+            color: #111827;
+        }
+
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 10px;
+            color: #9CA3AF;
+        }
+
+        .stamp {
+            margin-top: 40px;
+            text-align: right;
+            padding-right: 20px;
+        }
+
+        .stamp-text {
+            display: inline-block;
+            border: 3px solid #10B981;
+            color: #10B981;
+            padding: 8px 16px;
+            font-size: 18px;
+            font-weight: 900;
+            text-transform: uppercase;
+            border-radius: 8px;
+            transform: rotate(-5deg);
+        }
+
+        .late-fee {
+            color: #EF4444;
+            font-weight: 800;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        {% if logo_path %}
+        <div style="text-align: center; margin-bottom: 20px;">
+            <img src="{{ logo_path }}" style="height: 80px;">
+        </div>
+        {% endif %}
+        <h1>Payment Receipt</h1>
+        <p>Maintenance Bill - {{ bill.month }} {{ bill.year }}</p>
+    </div>
+
+    <table class="info-grid">
+        <tr>
+            <td class="info-col">
+                <div class="label">Flat Number</div>
+                <div class="value">{{ bill.user.unit_number|default:"N/A" }}</div>
+            </td>
+            <td class="info-col" style="text-align: right;">
+                <div class="label">Member Name</div>
+                <div class="value">{{ bill.user.first_name|default:bill.user.username }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td class="info-col">
+                <div class="label">Payment Status</div>
+                <div class="value" style="color: #10B981;">{{ bill.status }}</div>
+            </td>
+            <td class="info-col" style="text-align: right;">
+                <div class="label">Transaction ID</div>
+                <div class="value">{{ bill.transaction_id|default:"SOCIETY_INTERNAL" }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th style="text-align: right;">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Monthly Maintenance Charges</td>
+                <td style="text-align: right;">RS.{{ bill.maintenance_charge }}</td>
+            </tr>
+            {% if bill.late_fee_amount > 0 %}
+            <tr>
+                <td class="late-fee">Late Payment Tax (21%)</td>
+                <td class="late-fee text-right" style="text-align: right;">RS.{{ bill.late_fee_amount }}</td>
+            </tr>
+            {% endif %}
+            <tr class="total-row">
+                <td class="total-label">Total Amount Paid</td>
+                <td class="total-value" style="text-align: right;">RS.{{ bill.total_amount }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="stamp">
+        <div class="stamp-text">PAID ON {{ bill.payment_date|date:"d M Y" }}</div>
+    </div>
+
+    <div class="footer">
+        This is a computer-generated document and does not require a signature.
+        <br>Generated by TheManager Society Software.
+    </div>
+</body>
+
+</html>

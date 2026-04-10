@@ -1,0 +1,9 @@
+{
+  "appId": "com.themanager.app",
+  "appName": "TheManager",
+  "webDir": "www",
+  "server": {
+    "url": "http://192.168.0.106:8000",
+    "cleartext": true
+  }
+}

@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex-1 min-h-full flex flex-col items-center py-12 px-6">
+    <div class="w-full max-w-lg bg-card rounded-3xl p-8 shadow-xl border border-bordercolor my-auto">
+        <h1 class="text-3xl font-extrabold text-center text-textdark mb-2 tracking-tight">Create Account</h1>
+        <p class="text-center text-muted font-medium mb-8">Join the smarter management ecosystem</p>
+        
+        {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+            <div class="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-bold items-center flex gap-2">
+                <i data-lucide="alert-circle" class="w-4 h-4"></i> {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="post" action="{% url 'register' %}" class="space-y-4">
+            {% csrf_token %}
+            
+            <!-- Role Carousel (Compact) -->
+            <div class="relative mb-8 group/carousel px-10 max-w-xs mx-auto">
+                <!-- Navigation Arrows -->
+                <button type="button" onclick="slideRoles(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-bordercolor flex items-center justify-center text-muted hover:text-primary hover:border-primary transition-all active:scale-90 z-20 shadow-sm">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+                <button type="button" onclick="slideRoles(1)" class="absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-bordercolor flex items-center justify-center text-muted hover:text-primary hover:border-primary transition-all active:scale-90 z-20 shadow-sm">
+                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </button>
+
+                <!-- Slides Container -->
+                <div id="role-carousel" class="overflow-hidden relative rounded-3xl border border-gray-100 bg-gray-50/50">
+                    <div id="role-track" class="flex transition-transform duration-500 ease-out">
+                        <!-- Resident -->
+                        <div class="w-full flex-shrink-0 slide-item">
+                            <label class="cursor-pointer block">
+                                <input type="radio" name="role" value="resident" class="peer hidden" checked>
+                                <div class="px-6 py-4 text-center peer-checked:bg-white transition-all flex flex-col items-center justify-center">
+                                    <div class="w-10 h-10 rounded-xl bg-white border border-gray-50 flex items-center justify-center mb-2 shadow-sm text-muted peer-checked:text-primary transition-colors">
+                                        <i data-lucide="home" class="w-5 h-5"></i>
+                                    </div>
+                                    <h3 class="text-[10px] font-black text-textdark uppercase tracking-[0.2em] mb-0.5">Resident</h3>
+                                    <p class="text-[8px] font-bold text-muted uppercase tracking-widest leading-none">Building Member</p>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <!-- Secretary -->
+                        <div class="w-full flex-shrink-0 slide-item">
+                            <label class="cursor-pointer block">
+                                <input type="radio" name="role" value="secretary" class="peer hidden">
+                                <div class="px-6 py-4 text-center peer-checked:bg-white transition-all flex flex-col items-center justify-center">
+                                    <div class="w-10 h-10 rounded-xl bg-white border border-gray-50 flex items-center justify-center mb-2 shadow-sm text-muted peer-checked:text-primary transition-colors">
+                                        <i data-lucide="shield-check" class="w-5 h-5"></i>
+                                    </div>
+                                    <h3 class="text-[10px] font-black text-textdark uppercase tracking-[0.2em] mb-0.5">Secretary</h3>
+                                    <p class="text-[8px] font-bold text-muted uppercase tracking-widest leading-none">Society Admin</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Watchman -->
+                        <div class="w-full flex-shrink-0 slide-item">
+                            <label class="cursor-pointer block">
+                                <input type="radio" name="role" value="watchman" class="peer hidden">
+                                <div class="px-6 py-4 text-center peer-checked:bg-white transition-all flex flex-col items-center justify-center">
+                                    <div class="w-10 h-10 rounded-xl bg-white border border-gray-50 flex items-center justify-center mb-2 shadow-sm text-muted peer-checked:text-primary transition-colors">
+                                        <i data-lucide="eye" class="w-5 h-5"></i>
+                                    </div>
+                                    <h3 class="text-[10px] font-black text-textdark uppercase tracking-[0.2em] mb-0.5">Watchman</h3>
+                                    <p class="text-[8px] font-bold text-muted uppercase tracking-widest leading-none">Gate Security</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Company -->
+                        <div class="w-full flex-shrink-0 slide-item">
+                            <label class="cursor-pointer block">
+                                <input type="radio" name="role" value="company" class="peer hidden">
+                                <div class="px-6 py-4 text-center peer-checked:bg-white transition-all flex flex-col items-center justify-center">
+                                    <div class="w-10 h-10 rounded-xl bg-white border border-gray-50 flex items-center justify-center mb-2 shadow-sm text-muted peer-checked:text-primary transition-colors">
+                                        <i data-lucide="building-2" class="w-5 h-5"></i>
+                                    </div>
+                                    <h3 class="text-[10px] font-black text-textdark uppercase tracking-[0.2em] mb-0.5">Company</h3>
+                                    <p class="text-[8px] font-bold text-muted uppercase tracking-widest leading-none">Management Corp</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compact Dots Indicator -->
+                <div class="flex justify-center gap-1.5 mt-3">
+                    <div class="w-1 h-1 rounded-full dot transition-all bg-primary" onclick="jumpToSlide(0)"></div>
+                    <div class="w-1 h-1 rounded-full dot transition-all bg-gray-200" onclick="jumpToSlide(1)"></div>
+                    <div class="w-1 h-1 rounded-full dot transition-all bg-gray-200" onclick="jumpToSlide(2)"></div>
+                    <div class="w-1 h-1 rounded-full dot transition-all bg-gray-200" onclick="jumpToSlide(3)"></div>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-black text-textdark uppercase tracking-widest mb-2 opacity-50 ml-1">Full Name</label>
+                <input type="text" name="full_name" class="bg-gray-50 border border-bordercolor text-textdark rounded-xl focus:ring-2 focus:ring-primary focus:border-primary block w-full p-3 font-medium text-sm transition-all" placeholder="Enter your full name" required>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-black text-textdark uppercase tracking-widest mb-2 opacity-50 ml-1">Email</label>
+                    <input type="email" name="email" class="bg-gray-50 border border-bordercolor text-textdark rounded-xl focus:ring-2 focus:ring-primary focus:border-primary block w-full p-3 font-medium text-sm transition-all" placeholder="your@email.com" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-textdark uppercase tracking-widest mb-2 opacity-50 ml-1">Mobile</label>
+                    <input type="text" name="mobile" class="bg-gray-50 border border-bordercolor text-textdark rounded-xl focus:ring-2 focus:ring-primary focus:border-primary block w-full p-3 font-medium text-sm transition-all" placeholder="+91..." required>
+                </div>
+            </div>
+
+            <div id="unit_number_container" class="hidden">
+                <label class="block text-xs font-black text-textdark uppercase tracking-widest mb-2 opacity-50 ml-1">Room / Unit Number</label>
+                <input type="text" name="unit_number" class="bg-gray-50 border border-bordercolor text-textdark rounded-xl focus:ring-2 focus:ring-primary focus:border-primary block w-full p-3 font-medium text-sm transition-all" placeholder="e.g. O-101">
+            </div>
+
+            <div id="invite_code_container" class="hidden">
+                <label class="block text-xs font-black text-textdark uppercase tracking-widest mb-2 opacity-50 ml-1">Invite Code</label>
+                <input type="text" id="invite_code_input" name="invite_code" value="{{ request.GET.invite_code|default:'' }}" class="bg-gray-50 border border-bordercolor text-textdark rounded-xl focus:ring-2 focus:ring-primary focus:border-primary block w-full p-3 font-medium text-sm transition-all" placeholder="e.g. A1B2C3D4">
+                <p class="text-xs text-muted mt-1 ml-1 font-medium">Provided by your management company or secretary</p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-black text-textdark uppercase tracking-widest mb-2 opacity-50 ml-1">Password</label>
+                <input type="password" name="password" class="bg-gray-50 border border-bordercolor text-textdark rounded-xl focus:ring-2 focus:ring-primary focus:border-primary block w-full p-3 font-medium text-sm transition-all" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="w-full text-white bg-primary hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-black rounded-xl text-sm px-5 py-4 text-center shadow-lg shadow-primary/30 transition-all flex justify-center items-center gap-2 uppercase tracking-widest">
+                Create Account <i data-lucide="chevron-right" class="w-5 h-5"></i>
+            </button>
+        </form>
+        
+        <p class="text-center mt-6 text-xs font-bold text-muted uppercase tracking-widest">
+            Already have an account? <a href="{% url 'login' %}" class="text-primary hover:underline">Sign In</a>
+        </p>
+    </div>
+</div>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const roleRadios = document.querySelectorAll('input[name="role"]');
+    const inviteCodeContainer = document.getElementById('invite_code_container');
+    const inviteCodeInput = document.getElementById('invite_code_input');
+    const unitNumberContainer = document.getElementById('unit_number_container');
+
+    let currentSlide = 0;
+    const track = document.getElementById('role-track');
+    const dots = document.querySelectorAll('.dot');
+    const roleInputs = document.querySelectorAll('input[name="role"]');
+
+    function updateCarousel() {
+        track.style.transform = `translateX(-${currentSlide * 100}%)`;
+        
+        // Update dots
+        dots.forEach((dot, idx) => {
+            dot.classList.toggle('bg-primary', idx === currentSlide);
+            dot.classList.toggle('bg-gray-200', idx !== currentSlide);
+        });
+
+        // Update active radio button
+        roleInputs[currentSlide].checked = true;
+        toggleFields(); // Call original field toggle logic
+    }
+
+    window.slideRoles = function(dir) {
+        currentSlide = (currentSlide + dir + 4) % 4;
+        updateCarousel();
+    }
+
+    window.jumpToSlide = function(idx) {
+        currentSlide = idx;
+        updateCarousel();
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const roleParam = urlParams.get('role');
+    
+    if (roleParam === 'watchman') {
+        jumpToSlide(2); // Index 2 is Watchman
+    } else {
+        updateCarousel(); // Initial call to sync
+    }
+
+    function toggleFields() {
+        const selectedRole = document.querySelector('input[name="role"]:checked').value;
+
+        // Show/Hide Invite Code (Residents, Watchmen and Secretaries need it)
+        if (selectedRole === 'secretary' || selectedRole === 'resident' || selectedRole === 'watchman') {
+            inviteCodeContainer.classList.remove('hidden');
+            inviteCodeInput.required = true;
+        } else {
+            inviteCodeContainer.classList.add('hidden');
+            inviteCodeInput.required = false;
+        }
+
+        // Show/Hide Unit Number (Only Residents need it)
+        if (selectedRole === 'resident') {
+            unitNumberContainer.classList.remove('hidden');
+        } else {
+            unitNumberContainer.classList.add('hidden');
+        }
+    }
+
+    roleRadios.forEach(radio => {
+        radio.addEventListener('change', toggleFields);
+    });
+    toggleFields(); // Initial call
+});
+</script>
+{% endblock %}

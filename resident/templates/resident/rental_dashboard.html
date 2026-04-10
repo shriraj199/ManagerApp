@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="flex-1 p-4 md:p-6 max-w-2xl mx-auto w-full">
+
+    <div class="mb-6">
+        <h1 class="text-2xl font-extrabold text-textdark">My Rent</h1>
+        <p class="text-sm text-muted font-medium mt-1">Payment details set by your owner</p>
+    </div>
+
+    {% if rental_charge %}
+
+    <!-- Rent Amount Card -->
+    <div class="bg-gradient-to-br from-primary to-blue-700 rounded-2xl p-5 text-white shadow-xl shadow-primary/30 mb-4">
+        <div class="flex items-center gap-2 mb-1">
+            <i data-lucide="home" class="w-4 h-4 opacity-70"></i>
+            <p class="text-xs font-black uppercase tracking-widest opacity-70">Monthly Rent</p>
+        </div>
+        <p class="text-4xl font-extrabold tracking-tight">₹{{ rental_charge.monthly_rent }}</p>
+        <p class="text-xs opacity-70 font-medium mt-1">Due by {{ rental_charge.due_day }}<sup>th</sup> of every month</p>
+    </div>
+
+    <!-- Owner Info -->
+    {% if owner %}
+    <div class="bg-card border border-bordercolor rounded-2xl p-4 mb-4">
+        <p class="text-xs font-black text-muted uppercase tracking-widest mb-3">Your Owner</p>
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center font-extrabold text-primary">
+                {{ owner.first_name|first|upper|default:"O" }}
+            </div>
+            <div>
+                <p class="font-extrabold text-textdark text-sm">{{ owner.first_name|default:owner.username }}</p>
+                <p class="text-xs text-muted font-medium">Unit {{ owner.unit_number|default:"—" }}</p>
+                {% if owner.mobile_number %}
+                <p class="text-xs text-muted font-medium">📞 {{ owner.mobile_number }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pay To Section -->
+    {% if rental_charge.account_number %}
+    <div class="bg-blue-50/60 border border-blue-100 rounded-2xl p-5 mb-4">
+        <p class="text-xs font-black text-primary uppercase tracking-widest mb-5 flex items-center gap-2">
+            <i data-lucide="info" class="w-3.5 h-3.5"></i> Payment Instructions
+        </p>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-4">
+                <div>
+                   <p class="text-[10px] font-black uppercase tracking-widest text-muted mb-1">Send Rent To</p>
+                   <p class="text-xs font-bold text-textdark mb-1">Bank Account Number</p>
+                   <p class="font-extrabold text-primary text-xl font-mono tracking-wider">{{ rental_charge.account_number }}</p>
+                </div>
+                <div class="pt-2 border-t border-blue-100/50">
+                    <p class="text-[10px] text-muted font-medium italic">Please share a screenshot of the payment with your owner.</p>
+                </div>
+            </div>
+            {% if rental_charge.rent_qr %}
+            <div class="flex flex-col items-center bg-white p-4 rounded-3xl border border-blue-100 shadow-sm">
+                <p class="text-[10px] font-black uppercase tracking-widest text-muted mb-3">Scan to Pay</p>
+                <img src="{{ rental_charge.rent_qr.url }}" alt="Payment QR" class="h-32 w-32 object-contain">
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Notes -->
+    {% if rental_charge.notes %}
+    <div class="bg-gray-50 border border-bordercolor rounded-2xl p-4 mb-4">
+        <p class="text-xs font-black text-muted uppercase tracking-widest mb-2">Notes from Owner</p>
+        <p class="text-sm text-textdark font-medium">{{ rental_charge.notes }}</p>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- No rent set -->
+    <div class="flex flex-col items-center justify-center py-16 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mb-4">
+            <i data-lucide="clock" class="w-8 h-8 text-amber-500"></i>
+        </div>
+        <h2 class="text-lg font-extrabold text-textdark mb-1">Rent Not Set Yet</h2>
+        <p class="text-sm text-muted font-medium mb-2 max-w-xs">
+            Your owner hasn't configured your rent settings yet.
+        </p>
+        {% if owner %}
+        <p class="text-xs text-muted font-medium">Contact your owner: <span class="font-bold text-textdark">{{ owner.first_name|default:owner.username }}</span>
+            {% if owner.mobile_number %}({{ owner.mobile_number }}){% endif %}
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'resident_dashboard' %}" class="text-xs font-bold text-muted hover:text-primary transition-colors flex items-center gap-1">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
