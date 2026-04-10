@@ -1,8 +1,9 @@
 Django>=5.0
-django-lucide
 whitenoise
 gunicorn
 python-dotenv
 Pillow
 numpy
 reportlab
+psycopg2-binary
+dj-database-url
