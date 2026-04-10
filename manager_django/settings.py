@@ -81,14 +81,16 @@ WSGI_APPLICATION = 'manager_django.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+# SQLite: use /tmp on Vercel (writable), local path for dev
+if os.environ.get('VERCEL'):
+    _DB_PATH = '/tmp/db.sqlite3'
+else:
+    _DB_PATH = str(BASE_DIR / 'db.sqlite3')
 
-# WARNING: SQLite will NOT persist data on Vercel. 
-# Every redeploy or function spin-down will reset your database.
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': _DB_PATH,
     }
 }
 
@@ -125,11 +127,10 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
-
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Use StaticFilesStorage (no manifest needed – avoids crash when manifest is missing)
+STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
