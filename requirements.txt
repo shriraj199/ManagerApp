@@ -1,7 +1,7 @@
 Django>=5.0
 whitenoise
 gunicorn
-python-dotenv
+python-decouple
 Pillow
 numpy
 reportlab
